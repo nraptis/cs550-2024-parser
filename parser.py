@@ -55,20 +55,6 @@ AP -> Adj|AP Adj
 grammar = nltk.CFG.fromstring(NONTERMINALS + TERMINALS)
 parser = nltk.ChartParser(grammar)
 
-
-def tag_words(words, token_to_tag, unknown="UNK"):
-    tags = []
-    for w in words:
-        w2 = re.sub(r'[^a-zA-Z]', '', w).lower()
-        if not w2:
-            continue
-        tags.append(token_to_tag.get(w2, unknown))
-    return tags
-
-def ngrams(seq, n):
-    for i in range(len(seq) - n + 1):
-        yield tuple(seq[i:i+n])
-
 def debug_chart(parser, tokens):
     chart = parser.chart_parse(tokens)
 
@@ -96,50 +82,6 @@ def debug_chart(parser, tokens):
 
 def main():
 
-    loot = {}
-    t_lines = TERMINALS.split("\n")
-    for line in t_lines:
-        s_hakves = line.split(">")
-        if len(s_hakves) == 2:
-            kind = s_hakves[0]
-            kind = re.sub(r'[^a-zA-Z]', '', kind)
-            words = s_hakves[1].split("|")
-            for word in words:
-                word = re.sub(r'[^a-z]', '', word)
-                if kind not in loot:
-                    loot[kind] = []
-                loot[kind].append(word)
-
-    for key in loot.keys():
-        print(f"dict[{key}] => {loot[key]}")
-
-    # Build reverse map: token -> tag
-    token_to_tag = {}
-    for tag, words in loot.items():
-        for w in words:
-            w = re.sub(r'[^a-zA-Z]', '', w).lower()
-            if not w:
-                continue
-            if w in token_to_tag and token_to_tag[w] != tag:
-                print("WARNING: token maps to multiple tags:", w, token_to_tag[w], tag)
-            token_to_tag[w] = tag
-        
-    
-    ngram_counts = Counter()
-    for number in range(1, 11):
-        path = f"sentences/{number}.txt"
-        with open(path) as file:
-            sentence = file.read()
-        words = preprocess(sentence)
-        tags = tag_words(words, token_to_tag)
-
-        for n in range(2, 6):  # 2..5 length chunks
-            ngram_counts.update(ngrams(tags, n))
-
-    for pat, c in ngram_counts.most_common(40):
-        print(c, " ".join(pat))
-        
-
 
     # If filename specified, read sentence from file
     if len(sys.argv) == 2:
@@ -152,8 +94,6 @@ def main():
 
     # Convert input into list of words
     s = preprocess(s)
-
-    print(s)
 
     # Attempt to parse sentence
     try:
@@ -193,16 +133,18 @@ def preprocess(sentence: str):
             result.append(token)
     return result
 
-def is_np_chunk(tree: nltk.Tree) -> bool:
-    if tree.label() != "NP":
-        return False
+def np_chunk(tree):
+    """
+    Return a list of all noun phrase chunks in the sentence tree.
+    A noun phrase chunk is defined as any subtree of the sentence
+    whose label is "NP" that does not itself contain any other
+    noun phrases as subtrees.
+    """
+    result = []
     for subtree in tree.subtrees():
-        if subtree.label() == "NP":
-            return False
-    return True
-
-def np_chunk(tree) -> List[nltk.Tree]:
-    return list(tree.subtrees(filter=is_np_chunk))
+        if subtree.label() == "N":
+            result.append(subtree)
+    return result
 
 if __name__ == "__main__":
     main()
