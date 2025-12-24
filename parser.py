@@ -1,10 +1,6 @@
 import nltk
 import sys
 import re
-from typing import List
-from collections import Counter
-
-# nltk.download('punkt_tab')
 
 TERMINALS = """
 Adj -> "country" | "dreadful" | "enigmatical" | "little" | "moist" | "red"
@@ -18,32 +14,6 @@ P -> "at" | "before" | "in" | "of" | "on" | "to"
 V -> "arrived" | "came" | "chuckled" | "had" | "lit" | "said" | "sat"
 V -> "smiled" | "tell" | "were"
 """
-
-
-
-#==>['we', 'arrived', 'the', 'day', 'before', 'thursday']
-#-->[['N'], ['V'], ['Det'], ['N'], ['P'], ['N']]
-
-#==>['holmes', 'sat', 'in', 'the', 'red', 'armchair', 'and', 'he', 'chuckled']
-#-->[['N'], ['V'], ['P'], ['Det'], ['Adj'], ['N'], ['Conj'], ['N'], ['V']]
-
-#==>['my', 'companion', 'smiled', 'an', 'enigmatical', 'smile']
-#-->[['Det'], ['N'], ['V'], ['Det'], ['Adj'], ['N']]
-
-#==>['holmes', 'chuckled', 'to', 'himself']
-#-->[['N'], ['V'], ['P'], ['N']]
-
-#==>['she', 'never', 'said', 'a', 'word', 'until', 'we', 'were', 'at', 'the', 'door', 'here']
-#-->[['N'], ['Adv'], ['V'], ['Det'], ['N'], ['Conj'], ['N'], ['V'], ['P'], ['Det'], ['N'], ['Adv']]
-
-#==>['holmes', 'sat', 'down', 'and', 'lit', 'his', 'pipe']
-#-->[['N'], ['V'], ['Adv'], ['Conj'], ['V'], ['Det'], ['N']]
-
-#==>['i', 'had', 'a', 'country', 'walk', 'on', 'thursday', 'and', 'came', 'home', 'in', 'a', 'dreadful', 'mess']
-#-->[['N'], ['V'], ['Det'], ['Adj'], ['N'], ['P'], ['N'], ['Conj'], ['V'], ['N'], ['P'], ['Det'], ['Adj'], ['N']]
-
-#==>['i', 'had', 'a', 'little', 'moist', 'red', 'paint', 'in', 'the', 'palm', 'of', 'my', 'hand']
-#-->[['N'], ['V'], ['Det'], ['Adj'], ['Adj'], ['Adj'], ['N'], ['P'], ['Det'], ['N'], ['P'], ['Det'], ['N']]
 
 NONTERMINALS = """
 S -> NP VP|NP VP Conj NP VP|NP VP Conj VP
@@ -79,9 +49,7 @@ def debug_chart(parser, tokens):
         if e.start() == furthest and not e.is_complete():
             print(f"  {e.start()}..{e.end()}  {e.lhs()} -> {' '.join(map(str, e.rhs()))}  • {e.nextsym()}")
 
-
 def main():
-
 
     # If filename specified, read sentence from file
     if len(sys.argv) == 2:
@@ -94,6 +62,8 @@ def main():
 
     # Convert input into list of words
     s = preprocess(s)
+
+    print(s)
 
     # Attempt to parse sentence
     try:
@@ -116,7 +86,6 @@ def main():
         print("Noun Phrase Chunks")
         for np in np_chunk(tree):
             print(" ".join(np.flatten()))
-
 
 def preprocess(sentence: str):
     """
@@ -142,8 +111,13 @@ def np_chunk(tree):
     """
     result = []
     for subtree in tree.subtrees():
-        if subtree.label() == "N":
-            result.append(subtree)
+        if subtree.label() == "NP":
+            count_np = 0
+            for subsubtree in subtree.subtrees():
+                if subsubtree.label() == "NP":
+                    count_np += 1
+            if count_np == 1:
+                result.append(subtree)
     return result
 
 if __name__ == "__main__":
