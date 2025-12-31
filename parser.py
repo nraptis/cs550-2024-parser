@@ -25,6 +25,7 @@ AP -> Adj|AP Adj
 grammar = nltk.CFG.fromstring(NONTERMINALS + TERMINALS)
 parser = nltk.ChartParser(grammar)
 
+
 def debug_chart(parser, tokens):
     chart = parser.chart_parse(tokens)
 
@@ -87,6 +88,7 @@ def main():
         for np in np_chunk(tree):
             print(" ".join(np.flatten()))
 
+
 def preprocess(sentence: str):
     """
     Convert `sentence` to a list of its words.
@@ -101,6 +103,7 @@ def preprocess(sentence: str):
         if token:
             result.append(token)
     return result
+
 
 def np_chunk(tree):
     """
@@ -119,6 +122,7 @@ def np_chunk(tree):
             if count_np == 1:
                 result.append(subtree)
     return result
+
 
 if __name__ == "__main__":
     main()
